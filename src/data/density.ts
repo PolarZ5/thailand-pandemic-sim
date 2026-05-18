@@ -44,13 +44,17 @@ const RES_TO_KM: Record<Resolution, number> = {
  *   density(r) = sum over cities of  P_i * gaussian(r, sigma_i) / (2π σ²_i)
  *              + rural baseline (only inside the country mask)
  *   population(cell) = density(cell_center) * cellAreaKm²
+ *   then uniformly scale so the total matches `targetTotalMillions * 1e6`
  *
  * This isn't real census data, but it captures the qualitative shape:
  * Bangkok is overwhelmingly dense, secondary cities form moderate hotspots,
  * and rural areas have a thin baseline. That's enough to drive realistic
  * spreading dynamics.
  */
-export function buildSyntheticDensity(resolution: Resolution): DensityGrid {
+export function buildSyntheticDensity(
+  resolution: Resolution,
+  targetTotalMillions?: number,
+): DensityGrid {
   const cellSizeKm = RES_TO_KM[resolution];
   const { minLat, maxLat, minLng, maxLng } = THAILAND_BBOX;
 
@@ -96,6 +100,20 @@ export function buildSyntheticDensity(resolution: Resolution): DensityGrid {
       population[row * width + col] = pop;
       totalPopulation += pop;
     }
+  }
+
+  // Scale the whole grid so the country total matches the user-picked
+  // target. This preserves the *shape* of the density (relative city
+  // concentrations stay the same) and only shifts the absolute headcount.
+  if (
+    targetTotalMillions !== undefined &&
+    targetTotalMillions > 0 &&
+    totalPopulation > 0
+  ) {
+    const target = targetTotalMillions * 1e6;
+    const scale = target / totalPopulation;
+    for (let i = 0; i < population.length; i++) population[i] *= scale;
+    totalPopulation = target;
   }
 
   return {

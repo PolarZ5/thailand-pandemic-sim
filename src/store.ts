@@ -45,6 +45,8 @@ interface SimStore {
   params: DiseaseParams;
   resolution: Resolution;
   seed: SeedPoint | null;
+  /** Target total population in millions; the synthetic grid is rescaled to match. */
+  targetPopulationMillions: number;
 
   // Sim runtime
   running: boolean;
@@ -68,6 +70,7 @@ interface SimStore {
   setSeed: (s: SeedPoint | null) => void;
   setRunning: (r: boolean) => void;
   setSpeed: (s: number) => void;
+  setTargetPopulationMillions: (m: number) => void;
   updateViz: <K extends keyof VizSettings>(key: K, value: VizSettings[K]) => void;
   applyFrame: (day: number, intensity: Float32Array, metrics: MetricsPoint) => void;
   setGridMeta: (g: GridMeta) => void;
@@ -80,6 +83,7 @@ export const useSimStore = create<SimStore>((set) => ({
   params: { ...PRESETS[DEFAULT_PRESET] },
   resolution: "5km",
   seed: { lng: 100.5018, lat: 13.7563 }, // Bangkok as default seed
+  targetPopulationMillions: 70, // Thailand's roughly-real total
 
   running: false,
   finished: false,
@@ -118,6 +122,8 @@ export const useSimStore = create<SimStore>((set) => ({
   setSeed: (s) => set({ seed: s }),
   setRunning: (r) => set({ running: r }),
   setSpeed: (s) => set({ speedDaysPerSec: s }),
+  setTargetPopulationMillions: (m) =>
+    set({ targetPopulationMillions: Math.max(1, m) }),
   updateViz: (key, value) =>
     set((state) => ({ viz: { ...state.viz, [key]: value } })),
   applyFrame: (day, intensity, metrics) =>

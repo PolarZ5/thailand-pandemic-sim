@@ -9,6 +9,8 @@ export interface InitMessage {
   params: DiseaseParams;
   /** Seed point — the worker resolves to (row,col) once the grid is built. */
   seed: { lng: number; lat: number };
+  /** Target total population in millions (the synthetic grid is scaled to match). */
+  targetPopulationMillions: number;
   /** RNG seed for reproducibility (optional). */
   rngSeed?: number;
 }
@@ -26,6 +28,7 @@ export interface ResetMessage {
   params: DiseaseParams;
   seed: { lng: number; lat: number };
   resolution: Resolution;
+  targetPopulationMillions: number;
   rngSeed?: number;
 }
 

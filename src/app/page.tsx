@@ -76,15 +76,18 @@ export default function Page() {
       resolution: s.resolution,
       params: s.params,
       seed: { lng: s.seed.lng, lat: s.seed.lat },
+      targetPopulationMillions: s.targetPopulationMillions,
     });
   }, [post, store]);
 
-  // Init on mount, and re-init whenever resolution changes (worker rebuilds grid).
+  // Init on mount, and re-init whenever resolution or target pop changes
+  // (worker rebuilds + rescales the grid).
   const resolution = useSimStore((s) => s.resolution);
+  const targetPop = useSimStore((s) => s.targetPopulationMillions);
   useEffect(() => {
     initSim();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [resolution]);
+  }, [resolution, targetPop]);
 
   // Re-init when the seed point moves (only if not running).
   const seed = useSimStore((s) => s.seed);

@@ -50,16 +50,30 @@ export default function ControlsPanel({
   const day = useSimStore((s) => s.day);
   const seed = useSimStore((s) => s.seed);
   const viz = useSimStore((s) => s.viz);
+  const targetPop = useSimStore((s) => s.targetPopulationMillions);
   const setPreset = useSimStore((s) => s.setPreset);
   const updateParam = useSimStore((s) => s.updateParam);
   const setResolution = useSimStore((s) => s.setResolution);
   const setSpeed = useSimStore((s) => s.setSpeed);
   const updateViz = useSimStore((s) => s.updateViz);
+  const setTargetPopulationMillions = useSimStore(
+    (s) => s.setTargetPopulationMillions,
+  );
 
   return (
     <div className="flex flex-col gap-4 p-4 bg-gray-900 border-l border-gray-800 overflow-y-auto h-full">
       <div>
-        <h2 className="text-lg font-semibold mb-1">Thailand Pandemic Sim</h2>
+        <div className="flex items-baseline justify-between mb-1">
+          <h2 className="text-lg font-semibold">Thailand Pandemic Sim</h2>
+          <a
+            href="/help"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs text-blue-400 hover:text-blue-300 underline"
+          >
+            How to use ↗
+          </a>
+        </div>
         <p className="text-xs text-gray-400">
           Click on the map to set a seed point, then press ▶ Play.
         </p>
@@ -92,6 +106,20 @@ export default function ControlsPanel({
           <option value="5km">5 km (balanced)</option>
           <option value="1km">1 km (detailed, slow)</option>
         </select>
+      </div>
+
+      <div>
+        <Slider
+          label="Total population"
+          value={targetPop}
+          min={5} max={150} step={1}
+          onChange={(v) => setTargetPopulationMillions(v)}
+          suffix=" M"
+        />
+        <p className="text-[10px] text-gray-500 mt-1 leading-snug">
+          Rescales the synthetic density to match the target total without
+          changing the spatial shape. (Thailand ≈ 70 M.)
+        </p>
       </div>
 
       <div className="border-t border-gray-800 pt-3 space-y-3">

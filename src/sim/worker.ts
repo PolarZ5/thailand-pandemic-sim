@@ -114,7 +114,7 @@ self.onmessage = (ev: MessageEvent<WorkerInbound>) => {
     case "reset": {
       cancelPending();
       running = false;
-      grid = buildSyntheticDensity(msg.resolution);
+      grid = buildSyntheticDensity(msg.resolution, msg.targetPopulationMillions);
       // Resolve the seed lng/lat to a populated cell. If the click landed on
       // a sparse/empty cell (sea, mountain), nudge to the nearest populated
       // cell within a small search radius so the initial infections actually
