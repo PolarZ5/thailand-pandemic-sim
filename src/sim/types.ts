@@ -3,6 +3,13 @@
 import type { DiseaseParams } from "./presets";
 import type { Resolution } from "@/data/density";
 
+export interface InterventionMultipliers {
+  home: number;
+  work: number;
+  school: number;
+  other: number;
+}
+
 export interface InitMessage {
   type: "init";
   resolution: Resolution;
@@ -11,6 +18,7 @@ export interface InitMessage {
   seed: { lng: number; lat: number };
   /** Target total population in millions (the synthetic grid is scaled to match). */
   targetPopulationMillions: number;
+  interventions: InterventionMultipliers;
   /** RNG seed for reproducibility (optional). */
   rngSeed?: number;
 }
@@ -29,6 +37,7 @@ export interface ResetMessage {
   seed: { lng: number; lat: number };
   resolution: Resolution;
   targetPopulationMillions: number;
+  interventions: InterventionMultipliers;
   rngSeed?: number;
 }
 
@@ -74,6 +83,8 @@ export interface DoneMessage {
   day: number;
   finalAttackRate: number;
   history: MetricsPoint[];
+  /** Attack rate per 5-year age band (length 16). */
+  ageAttackRates: number[];
 }
 
 export type WorkerOutbound = GridStateMessage | ReadyMessage | DoneMessage;

@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import { useSimStore } from "@/store";
+import AgeStructureFigure from "./AgeStructureFigure";
 
 function formatPeople(v: number) {
   if (v >= 1_000_000) return (v / 1_000_000).toFixed(2) + "M";
@@ -13,6 +14,8 @@ export default function SimSummary({ onReset }: { onReset: () => void }) {
   const finished = useSimStore((s) => s.finished);
   const history = useSimStore((s) => s.history);
   const totalPop = useSimStore((s) => s.gridMeta?.totalPopulation ?? 0);
+  const ageAttackRates = useSimStore((s) => s.ageAttackRates);
+  const interventions = useSimStore((s) => s.interventions);
 
   const stats = useMemo(() => {
     if (!finished || history.length === 0) return null;
@@ -46,10 +49,11 @@ export default function SimSummary({ onReset }: { onReset: () => void }) {
   if (!finished || !stats) return null;
 
   return (
-    <div className="absolute inset-0 z-20 flex items-center justify-center
-                    bg-black/60 backdrop-blur-sm pointer-events-auto">
+    <div className="absolute inset-0 z-20 flex items-start justify-center
+                    bg-black/60 backdrop-blur-sm overflow-y-auto py-6
+                    pointer-events-auto">
       <div className="bg-gray-900 border border-gray-700 rounded-lg shadow-2xl
-                      max-w-lg w-[90%] p-6 text-gray-200">
+                      max-w-4xl w-[95%] p-6 text-gray-200">
         <div className="flex items-baseline justify-between mb-3">
           <h3 className="text-xl font-semibold text-green-400">
             🏁 End of epidemic
@@ -63,7 +67,7 @@ export default function SimSummary({ onReset }: { onReset: () => void }) {
           (E + I ≈ 0).
         </p>
 
-        <div className="grid grid-cols-2 gap-3 text-sm">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm mb-4">
           <Stat label="Attack rate (total ever infected)"
                 value={`${(stats.attackRate * 100).toFixed(1)}%`}
                 accent="text-red-300" />
@@ -87,6 +91,11 @@ export default function SimSummary({ onReset }: { onReset: () => void }) {
                   accent="text-purple-300" />
           )}
         </div>
+
+        <AgeStructureFigure
+          ageAttackRates={ageAttackRates}
+          interventions={interventions}
+        />
 
         <div className="mt-5 flex gap-2">
           <button

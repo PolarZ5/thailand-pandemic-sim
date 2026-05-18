@@ -3,7 +3,7 @@ import type { Resolution } from "@/data/density";
 import {
   PRESETS, DEFAULT_PRESET, type DiseaseParams, type PresetId,
 } from "@/sim/presets";
-import type { MetricsPoint } from "@/sim/types";
+import type { MetricsPoint, InterventionMultipliers } from "@/sim/types";
 
 interface SeedPoint {
   lng: number;
@@ -47,6 +47,10 @@ interface SimStore {
   seed: SeedPoint | null;
   /** Target total population in millions; the synthetic grid is rescaled to match. */
   targetPopulationMillions: number;
+  /** Per-setting contact-matrix multipliers (home/work/school/other), 0–1+. */
+  interventions: InterventionMultipliers;
+  /** Final attack rates by 5-year age band (length 16). Set when sim ends. */
+  ageAttackRates: number[] | null;
 
   // Sim runtime
   running: boolean;
@@ -71,10 +75,12 @@ interface SimStore {
   setRunning: (r: boolean) => void;
   setSpeed: (s: number) => void;
   setTargetPopulationMillions: (m: number) => void;
+  updateIntervention: (k: keyof InterventionMultipliers, v: number) => void;
+  resetInterventions: () => void;
   updateViz: <K extends keyof VizSettings>(key: K, value: VizSettings[K]) => void;
   applyFrame: (day: number, intensity: Float32Array, metrics: MetricsPoint) => void;
   setGridMeta: (g: GridMeta) => void;
-  setFinished: (history: MetricsPoint[]) => void;
+  setFinished: (history: MetricsPoint[], ageAttackRates: number[]) => void;
   resetHistory: () => void;
 }
 
@@ -84,6 +90,8 @@ export const useSimStore = create<SimStore>((set) => ({
   resolution: "5km",
   seed: { lng: 100.5018, lat: 13.7563 }, // Bangkok as default seed
   targetPopulationMillions: 70, // Thailand's roughly-real total
+  interventions: { home: 1, work: 1, school: 1, other: 1 },
+  ageAttackRates: null,
 
   running: false,
   finished: false,
@@ -124,6 +132,12 @@ export const useSimStore = create<SimStore>((set) => ({
   setSpeed: (s) => set({ speedDaysPerSec: s }),
   setTargetPopulationMillions: (m) =>
     set({ targetPopulationMillions: Math.max(1, m) }),
+  updateIntervention: (k, v) =>
+    set((state) => ({
+      interventions: { ...state.interventions, [k]: Math.max(0, v) },
+    })),
+  resetInterventions: () =>
+    set({ interventions: { home: 1, work: 1, school: 1, other: 1 } }),
   updateViz: (key, value) =>
     set((state) => ({ viz: { ...state.viz, [key]: value } })),
   applyFrame: (day, intensity, metrics) =>
@@ -134,7 +148,11 @@ export const useSimStore = create<SimStore>((set) => ({
       history: [...state.history, metrics],
     })),
   setGridMeta: (g) => set({ gridMeta: g }),
-  setFinished: (history) => set({ finished: true, running: false, history }),
+  setFinished: (history, ageAttackRates) =>
+    set({ finished: true, running: false, history, ageAttackRates }),
   resetHistory: () =>
-    set({ history: [], latestMetrics: null, day: 0, finished: false }),
+    set({
+      history: [], latestMetrics: null, day: 0,
+      finished: false, ageAttackRates: null,
+    }),
 }));

@@ -9,3 +9,6 @@ out/
 
 # Local Claude Code config (personal, not project state)
 .claude/
+
+# One-off download cache (Prem .rdata files, etc.) — not committed.
+tmp/
