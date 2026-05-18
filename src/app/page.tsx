@@ -53,7 +53,7 @@ export default function Page() {
       } else if (msg.type === "grid") {
         s.applyFrame(msg.day, msg.intensity, msg.metrics);
       } else if (msg.type === "done") {
-        s.setFinished(msg.history);
+        s.setFinished(msg.history, msg.ageAttackRates);
       }
     };
 
@@ -76,15 +76,20 @@ export default function Page() {
       resolution: s.resolution,
       params: s.params,
       seed: { lng: s.seed.lng, lat: s.seed.lat },
+      targetPopulationMillions: s.targetPopulationMillions,
+      interventions: s.interventions,
     });
   }, [post, store]);
 
-  // Init on mount, and re-init whenever resolution changes (worker rebuilds grid).
+  // Init on mount, and re-init whenever resolution, target pop, or
+  // interventions change (worker rebuilds + rescales the grid).
   const resolution = useSimStore((s) => s.resolution);
+  const targetPop = useSimStore((s) => s.targetPopulationMillions);
+  const interventions = useSimStore((s) => s.interventions);
   useEffect(() => {
     initSim();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [resolution]);
+  }, [resolution, targetPop, interventions]);
 
   // Re-init when the seed point moves (only if not running).
   const seed = useSimStore((s) => s.seed);

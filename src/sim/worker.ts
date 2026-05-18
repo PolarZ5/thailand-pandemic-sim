@@ -86,6 +86,7 @@ function emitFrame() {
       finalAttackRate:
         1 - metrics.S / (metrics.S + metrics.E + metrics.I + metrics.R),
       history: engine.getHistory(),
+      ageAttackRates: engine.getAgeAttackRates(),
     };
     (self as DedicatedWorkerGlobalScope).postMessage(done);
   }
@@ -114,7 +115,7 @@ self.onmessage = (ev: MessageEvent<WorkerInbound>) => {
     case "reset": {
       cancelPending();
       running = false;
-      grid = buildSyntheticDensity(msg.resolution);
+      grid = buildSyntheticDensity(msg.resolution, msg.targetPopulationMillions);
       // Resolve the seed lng/lat to a populated cell. If the click landed on
       // a sparse/empty cell (sea, mountain), nudge to the nearest populated
       // cell within a small search radius so the initial infections actually
@@ -123,7 +124,9 @@ self.onmessage = (ev: MessageEvent<WorkerInbound>) => {
         lngLatToCell(grid, msg.seed.lng, msg.seed.lat) ??
         { row: Math.floor(grid.height / 2), col: Math.floor(grid.width / 2) };
       const seed = pickPopulatedCell(grid, cell.row, cell.col);
-      engine = new SimEngine(grid, msg.params, seed, msg.rngSeed);
+      engine = new SimEngine(
+        grid, msg.params, seed, msg.interventions, msg.rngSeed,
+      );
       postReady(grid);
       // Emit initial frame so the UI sees day 0 state.
       const intensity = engine.getIntensity();

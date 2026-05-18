@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import maplibregl from "maplibre-gl";
 import { MapboxOverlay } from "@deck.gl/mapbox";
 import { ColumnLayer, ScatterplotLayer } from "@deck.gl/layers";
 import { useSimStore } from "@/store";
+import { isInsideThailand } from "@/data/thailand-mask";
 
 const KM_PER_DEG_LAT = 111.32;
 function kmPerDegLng(lat: number) {
@@ -83,6 +84,10 @@ export default function Map() {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const deckRef = useRef<MapboxOverlay | null>(null);
+  // "Seed must be inside Thailand" — shown briefly when the user clicks
+  // outside the country boundary.
+  const [seedWarning, setSeedWarning] = useState<string | null>(null);
+  const warningTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const gridMeta = useSimStore((s) => s.gridMeta);
   const intensity = useSimStore((s) => s.intensity);
@@ -168,7 +173,19 @@ export default function Map() {
     deckRef.current = overlay;
 
     map.on("click", (e) => {
-      setSeed({ lng: e.lngLat.lng, lat: e.lngLat.lat });
+      const { lng, lat } = e.lngLat;
+      if (!isInsideThailand(lng, lat)) {
+        setSeedWarning(
+          "Seed must be inside Thailand — click on land within the border.",
+        );
+        if (warningTimerRef.current) clearTimeout(warningTimerRef.current);
+        warningTimerRef.current = setTimeout(
+          () => setSeedWarning(null),
+          2500,
+        );
+        return;
+      }
+      setSeed({ lng, lat });
     });
 
     return () => {
@@ -238,6 +255,17 @@ export default function Map() {
       ref={containerRef}
       className="relative h-full w-full"
       style={{ background: "#0b0f17" }}
-    />
+    >
+      {seedWarning && (
+        <div
+          className="absolute top-3 left-1/2 -translate-x-1/2 z-30
+                     bg-yellow-500/90 text-black text-xs font-medium
+                     px-3 py-2 rounded shadow-lg pointer-events-none"
+          role="status"
+        >
+          {seedWarning}
+        </div>
+      )}
+    </div>
   );
 }
